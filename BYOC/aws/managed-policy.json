@@ -285,6 +285,8 @@
       "Effect": "Allow",
       "Action": [
         "eks:DescribeCluster",
+        "eks:DescribeUpdate",
+        "eks:ListUpdates",
         "eks:CreateCluster",
         "eks:DeleteCluster",
         "eks:UpdateClusterConfig",
