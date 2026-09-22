@@ -1,0 +1,45 @@
+{
+  "alert": "PodsUnschedulable",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "kube_pod_status_unschedulable{namespace=\"<NAMESPACE>\"}",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "3",
+    "target": 1,
+    "matchType": "2",
+    "selectedQueryName": "A",
+    "requireMinPoints": true,
+    "requiredNumPoints": 4
+  },
+  "labels": {
+    "component": "platform",
+    "namespace": "<NAMESPACE>",
+    "severity": "2"
+  },
+  "annotations": {
+    "description": "Pod is Pending/unschedulable — usually Insufficient cpu/memory (cluster capacity) or taints/affinity.",
+    "resolution": "kubectl -n {{ $labels.namespace }} describe pod {{ $labels.pod }} | grep -A5 Events; if 'Insufficient cpu/memory' -> add nodes / apply the gcsfuse safe-to-evict fix so the autoscaler can consolidate.",
+    "summary": "{{ $labels.namespace }}/{{ $labels.pod }} cannot be scheduled for 5m"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

@@ -1,0 +1,3043 @@
+{
+  "id": "01a042e4-1b55-757c-a9c7-c407f98d0ab5",
+  "createdAt": "2026-08-27T11:04:00.597353Z",
+  "updatedAt": "2026-08-27T14:01:02.897042Z",
+  "locked": false,
+  "source": "user",
+  "schemaVersion": "v6",
+  "image": "",
+  "name": "grpc-http-refold",
+  "tags": [],
+  "spec": {
+    "display": {
+      "name": "HTTP + gRPC — Refold",
+      "description": "HTTP percentiles come from the request_response_latency_seconds.quantile Summary sub-metric. gRPC percentiles are NOT rendered — the gRPC metrics are Histograms and SigNoz builder-query cannot express histogram_quantile; add a ClickHouseSQL follow-up if percentiles are needed. gRPC call-rate uses the rate of grpc_server_requests_total (server) and grpc_client_duration_seconds.count (client — histogram counter). Filter/label form on ALL metrics here is underscore (Prom-scraped app metrics, both underscore and dot label aliases exist). Values on latency metrics named _seconds may actually be milliseconds — verify the unit after import."
+    },
+    "variables": [
+      {
+        "kind": "ListVariable",
+        "spec": {
+          "display": {
+            "name": "Environment (k8s namespace)",
+            "description": "The Kubernetes namespace Refold is deployed into"
+          },
+          "allowAllValue": true,
+          "allowMultiple": true,
+          "customAllValue": "",
+          "capturingRegexp": "",
+          "sort": "alphabetical-asc",
+          "plugin": {
+            "kind": "signoz/DynamicVariable",
+            "spec": {
+              "name": "k8s.namespace.name",
+              "signal": "all"
+            }
+          },
+          "name": "namespace"
+        }
+      },
+      {
+        "kind": "ListVariable",
+        "spec": {
+          "display": {
+            "name": "Service",
+            "description": "service.name"
+          },
+          "allowAllValue": true,
+          "allowMultiple": true,
+          "customAllValue": "",
+          "capturingRegexp": "",
+          "sort": "alphabetical-asc",
+          "plugin": {
+            "kind": "signoz/DynamicVariable",
+            "spec": {
+              "name": "service.name",
+              "signal": "all"
+            }
+          },
+          "name": "service"
+        }
+      },
+      {
+        "kind": "ListVariable",
+        "spec": {
+          "display": {
+            "name": "Pod",
+            "description": "k8s.pod.name"
+          },
+          "allowAllValue": true,
+          "allowMultiple": true,
+          "customAllValue": "",
+          "capturingRegexp": "",
+          "sort": "alphabetical-asc",
+          "plugin": {
+            "kind": "signoz/DynamicVariable",
+            "spec": {
+              "name": "k8s.pod.name",
+              "signal": "all"
+            }
+          },
+          "name": "pod"
+        }
+      }
+    ],
+    "panels": {
+      "p_grpc_cli_by_method": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "gRPC client calls — by target / method / status",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "grpc_client_duration_seconds.count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "grpc_method",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "status",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "target",
+                              "signal": "",
+                              "fieldContext": "attribute",
+                              "fieldDataType": "string"
+                            },
+                            {
+                              "name": "method",
+                              "signal": "",
+                              "fieldContext": "attribute",
+                              "fieldDataType": "string"
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{service_name}} → {{target}}/{{method}} [{{status}}]"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_grpc_cli_by_method_pod": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "gRPC client calls — by target / method / status — per pod",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "grpc_client_duration_seconds.count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "grpc_method",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "status",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "target",
+                              "signal": "",
+                              "fieldContext": "attribute",
+                              "fieldDataType": "string"
+                            },
+                            {
+                              "name": "method",
+                              "signal": "",
+                              "fieldContext": "attribute",
+                              "fieldDataType": "string"
+                            },
+                            {
+                              "name": "k8s_pod_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{service_name}} → {{target}}/{{method}} [{{status}}] / {{k8s_pod_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_grpc_cli_err_pct": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "gRPC client error % — caller → target",
+            "description": "non-OK status / total * 100"
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "percent",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "grpc_client_duration_seconds.count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod AND status != 'OK' AND status != '0'"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "target",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "err rate {{service_name}} → {{target}}"
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "B",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "grpc_client_duration_seconds.count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "target",
+                              "signal": "",
+                              "fieldContext": "attribute",
+                              "fieldDataType": "string"
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "total rate {{service_name}} → {{target}}"
+                        }
+                      },
+                      {
+                        "type": "builder_formula",
+                        "spec": {
+                          "name": "F1",
+                          "expression": "A/B*100",
+                          "disabled": false,
+                          "order": null,
+                          "functions": null,
+                          "legend": "{{service_name}} → {{target}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_grpc_cli_err_pct_pod": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "gRPC client error % — caller → target — per pod",
+            "description": "non-OK status / total * 100"
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "percent",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "grpc_client_duration_seconds.count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod AND status != 'OK' AND status != '0'"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "target",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_pod_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "err rate {{service_name}} → {{target}} / {{k8s_pod_name}}"
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "B",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "grpc_client_duration_seconds.count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "target",
+                              "signal": "",
+                              "fieldContext": "attribute",
+                              "fieldDataType": "string"
+                            },
+                            {
+                              "name": "k8s_pod_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "total rate {{service_name}} → {{target}} / {{k8s_pod_name}}"
+                        }
+                      },
+                      {
+                        "type": "builder_formula",
+                        "spec": {
+                          "name": "F1",
+                          "expression": "A/B*100",
+                          "disabled": false,
+                          "order": null,
+                          "functions": null,
+                          "legend": "{{service_name}} → {{target}} / {{k8s_namespace_name}} / {{k8s_pod_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_grpc_cli_rate": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "gRPC client call rate — caller → target",
+            "description": "rate of grpc_client_duration_seconds.count (histogram count = call count)"
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "grpc_client_duration_seconds.count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "target",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{service_name}} → {{target}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_grpc_cli_rate_pod": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "gRPC client call rate — caller → target — per pod",
+            "description": "rate of grpc_client_duration_seconds.count (histogram count = call count)"
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "grpc_client_duration_seconds.count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "target",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_pod_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{service_name}} → {{target}} / {{k8s_namespace_name}} / {{k8s_pod_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_grpc_srv_by_method": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "gRPC server calls — by method + status",
+            "description": "rate of grpc_server_requests_total split by grpc_method + status"
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "grpc_server_requests_total",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "grpc_method",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "status",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{grpc_method}} [{{status}}] — {{service_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_grpc_srv_by_method_pod": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "gRPC server calls — by method + status — per pod",
+            "description": "rate of grpc_server_requests_total split by grpc_method + status"
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "grpc_server_requests_total",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "grpc_method",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "status",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_pod_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{grpc_method}} [{{status}}] — {{service_name}} / {{k8s_pod_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_grpc_srv_err_pct": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "gRPC server error % — by service",
+            "description": "non-OK status / total * 100"
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "percent",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "grpc_server_requests_total",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod AND status != 'OK' AND status != '0'"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "err rate {{service_name}}"
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "B",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "grpc_server_requests_total",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "total rate {{service_name}}"
+                        }
+                      },
+                      {
+                        "type": "builder_formula",
+                        "spec": {
+                          "name": "F1",
+                          "expression": "A/B*100",
+                          "disabled": false,
+                          "order": null,
+                          "functions": null,
+                          "legend": "{{service_name}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_grpc_srv_err_pct_pod": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "gRPC server error % — by service — per pod",
+            "description": "non-OK status / total * 100"
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "percent",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "grpc_server_requests_total",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod AND status != 'OK' AND status != '0'"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_pod_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "err rate {{service_name}} / {{k8s_pod_name}}"
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "B",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "grpc_server_requests_total",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_pod_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "total rate {{service_name}} / {{k8s_pod_name}}"
+                        }
+                      },
+                      {
+                        "type": "builder_formula",
+                        "spec": {
+                          "name": "F1",
+                          "expression": "A/B*100",
+                          "disabled": false,
+                          "order": null,
+                          "functions": null,
+                          "legend": "{{service_name}} / {{k8s_namespace_name}} / {{k8s_pod_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_grpc_srv_rate": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "gRPC server call rate — by service",
+            "description": "rate of grpc_server_requests_total"
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "grpc_server_requests_total",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{service_name}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_grpc_srv_rate_pod": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "gRPC server call rate — by service — per pod",
+            "description": "rate of grpc_server_requests_total"
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "grpc_server_requests_total",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_pod_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{service_name}} / {{k8s_namespace_name}} / {{k8s_pod_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_http_5xx_pct": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "HTTP 5xx % — by service",
+            "description": "formula: rate(5xx count) / rate(total count) * 100"
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "percent",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "request_response_latency_seconds.count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod AND code >= 500 AND code < 600"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "5xx rate {{service_name}}"
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "B",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "request_response_latency_seconds.count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "total rate {{service_name}}"
+                        }
+                      },
+                      {
+                        "type": "builder_formula",
+                        "spec": {
+                          "name": "F1",
+                          "expression": "A/B*100",
+                          "disabled": false,
+                          "order": null,
+                          "functions": null,
+                          "legend": "{{service_name}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_http_5xx_pct_pod": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "HTTP 5xx % — by service — per pod",
+            "description": "formula: rate(5xx count) / rate(total count) * 100"
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "percent",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "request_response_latency_seconds.count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod AND code >= 500 AND code < 600"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_pod_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "5xx rate {{service_name}} / {{k8s_pod_name}}"
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "B",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "request_response_latency_seconds.count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_pod_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "total rate {{service_name}} / {{k8s_pod_name}}"
+                        }
+                      },
+                      {
+                        "type": "builder_formula",
+                        "spec": {
+                          "name": "F1",
+                          "expression": "A/B*100",
+                          "disabled": false,
+                          "order": null,
+                          "functions": null,
+                          "legend": "{{service_name}} / {{k8s_namespace_name}} / {{k8s_pod_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_http_lat_p95_p90": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "HTTP P95 & P90 latency — by service",
+            "description": "Summary quantile sub-metric filtered by quantile label"
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "ms",
+                "decimalPrecision": "3"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "request_response_latency_seconds.quantile",
+                              "temporality": "",
+                              "timeAggregation": "latest",
+                              "spaceAggregation": "max",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod AND quantile = '0.95'"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "p95 {{service_name}} / {{k8s_namespace_name}}"
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "B",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "request_response_latency_seconds.quantile",
+                              "temporality": "",
+                              "timeAggregation": "latest",
+                              "spaceAggregation": "max",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod AND quantile = '0.9'"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "p90 {{service_name}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_http_lat_p95_p90_pod": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "HTTP P95 & P90 latency — by service — per pod",
+            "description": "Summary quantile sub-metric filtered by quantile label"
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "ms",
+                "decimalPrecision": "3"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "request_response_latency_seconds.quantile",
+                              "temporality": "",
+                              "timeAggregation": "latest",
+                              "spaceAggregation": "max",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod AND quantile = '0.95'"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_pod_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "p95 {{service_name}} / {{k8s_namespace_name}} / {{k8s_pod_name}}"
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "B",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "request_response_latency_seconds.quantile",
+                              "temporality": "",
+                              "timeAggregation": "latest",
+                              "spaceAggregation": "max",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod AND quantile = '0.9'"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_pod_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "p90 {{service_name}} / {{k8s_namespace_name}} / {{k8s_pod_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_http_rate_by_code": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "HTTP request rate — by status code",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "request_response_latency_seconds.count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "code",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{code}} — {{service_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_http_rate_by_code_pod": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "HTTP request rate — by status code — per pod",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "request_response_latency_seconds.count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "code",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_pod_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{code}} — {{service_name}} / {{k8s_pod_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_http_rate_by_service": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "HTTP request rate — by service",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "request_response_latency_seconds.count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{service_name}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_http_rate_by_service_pod": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "HTTP request rate — by service — per pod",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "request_response_latency_seconds.count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_pod_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{service_name}} / {{k8s_namespace_name}} / {{k8s_pod_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_http_slowest_routes": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Slowest HTTP APIs — P95 by route (descending)",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "ms",
+                "decimalPrecision": "3"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "request_response_latency_seconds.quantile",
+                              "temporality": "",
+                              "timeAggregation": "latest",
+                              "spaceAggregation": "max",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod AND quantile = '0.95'"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "route",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{route}} — {{service_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_http_slowest_routes_pod": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Slowest HTTP APIs — P95 by route (descending) — per pod",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "ms",
+                "decimalPrecision": "3"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "request_response_latency_seconds.quantile",
+                              "temporality": "",
+                              "timeAggregation": "latest",
+                              "spaceAggregation": "max",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND service_name IN $service AND k8s_pod_name IN $pod AND quantile = '0.95'"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "route",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "service_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_pod_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{route}} — {{service_name}} / {{k8s_pod_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      }
+    },
+    "layouts": [
+      {
+        "kind": "Grid",
+        "spec": {
+          "items": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_http_lat_p95_p90"
+              }
+            },
+            {
+              "x": 6,
+              "y": 0,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_http_lat_p95_p90_pod"
+              }
+            },
+            {
+              "x": 0,
+              "y": 5,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_http_5xx_pct"
+              }
+            },
+            {
+              "x": 6,
+              "y": 5,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_http_5xx_pct_pod"
+              }
+            },
+            {
+              "x": 0,
+              "y": 10,
+              "width": 6,
+              "height": 6,
+              "content": {
+                "$ref": "#/spec/panels/p_http_slowest_routes"
+              }
+            },
+            {
+              "x": 6,
+              "y": 10,
+              "width": 6,
+              "height": 6,
+              "content": {
+                "$ref": "#/spec/panels/p_http_slowest_routes_pod"
+              }
+            },
+            {
+              "x": 0,
+              "y": 16,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_http_rate_by_service"
+              }
+            },
+            {
+              "x": 6,
+              "y": 16,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_http_rate_by_service_pod"
+              }
+            },
+            {
+              "x": 0,
+              "y": 21,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_http_rate_by_code"
+              }
+            },
+            {
+              "x": 6,
+              "y": 21,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_http_rate_by_code_pod"
+              }
+            },
+            {
+              "x": 0,
+              "y": 26,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_grpc_srv_rate"
+              }
+            },
+            {
+              "x": 6,
+              "y": 26,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_grpc_srv_rate_pod"
+              }
+            },
+            {
+              "x": 0,
+              "y": 31,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_grpc_srv_err_pct"
+              }
+            },
+            {
+              "x": 6,
+              "y": 31,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_grpc_srv_err_pct_pod"
+              }
+            },
+            {
+              "x": 0,
+              "y": 36,
+              "width": 6,
+              "height": 6,
+              "content": {
+                "$ref": "#/spec/panels/p_grpc_srv_by_method"
+              }
+            },
+            {
+              "x": 6,
+              "y": 36,
+              "width": 6,
+              "height": 6,
+              "content": {
+                "$ref": "#/spec/panels/p_grpc_srv_by_method_pod"
+              }
+            },
+            {
+              "x": 0,
+              "y": 42,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_grpc_cli_rate"
+              }
+            },
+            {
+              "x": 6,
+              "y": 42,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_grpc_cli_rate_pod"
+              }
+            },
+            {
+              "x": 0,
+              "y": 47,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_grpc_cli_err_pct"
+              }
+            },
+            {
+              "x": 6,
+              "y": 47,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_grpc_cli_err_pct_pod"
+              }
+            },
+            {
+              "x": 0,
+              "y": 52,
+              "width": 6,
+              "height": 6,
+              "content": {
+                "$ref": "#/spec/panels/p_grpc_cli_by_method"
+              }
+            },
+            {
+              "x": 6,
+              "y": 52,
+              "width": 6,
+              "height": 6,
+              "content": {
+                "$ref": "#/spec/panels/p_grpc_cli_by_method_pod"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "duration": "1h",
+    "refreshInterval": "1m",
+    "links": null
+  }
+}

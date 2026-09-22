@@ -1,0 +1,44 @@
+{
+  "alert": "RedisConnectionsHigh",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "10m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "(redis_connected_clients{k8s_namespace_name=\"<NAMESPACE>\"} / redis_config_maxclients{k8s_namespace_name=\"<NAMESPACE>\"} > 0.85) and (redis_config_maxclients{k8s_namespace_name=\"<NAMESPACE>\"} > 0)",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0,
+    "matchType": "2",
+    "selectedQueryName": "A",
+    "requireMinPoints": true,
+    "requiredNumPoints": 9
+  },
+  "labels": {
+    "namespace": "<NAMESPACE>",
+    "service": "redis",
+    "severity": "3"
+  },
+  "annotations": {
+    "resolution": "Connection count near maxclients. Check client pools/leaks; raise maxclients or scale.",
+    "summary": "Redis {{ $labels.k8s_namespace_name }} connections at {{ $value | printf \"%.2f\" }} of maxclients"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

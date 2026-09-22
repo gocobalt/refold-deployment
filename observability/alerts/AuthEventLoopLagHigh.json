@@ -1,0 +1,43 @@
+{
+  "alert": "AuthEventLoopLagHigh",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "nodejs_eventloop_lag_p99_seconds{service_name=\"auth-service\",k8s_namespace_name=\"<NAMESPACE>\"}",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0.2,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 4
+  },
+  "labels": {
+    "namespace": "<NAMESPACE>",
+    "service": "auth",
+    "severity": "2"
+  },
+  "annotations": {
+    "resolution": "Node.js event-loop lag high (app blocked/overloaded). Check CPU, GC pauses, slow handlers; scale out or profile.",
+    "summary": "auth event-loop p99 lag {{ printf \"%.2f\" $value }} (pod {{ $labels.pod }})"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

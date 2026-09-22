@@ -1,0 +1,44 @@
+{
+  "alert": "MongoReplsetMemberNotOperational",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "mongodb_mongod_replset_my_state{cluster=\"<MONGO_CLUSTER>\"} != 1 and mongodb_mongod_replset_my_state{cluster=\"<MONGO_CLUSTER>\"} != 2",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 2
+  },
+  "labels": {
+    "namespace": "<NAMESPACE>",
+    "service": "mongodb",
+    "severity": "1"
+  },
+  "annotations": {
+    "description": "State codes: 0=STARTUP, 3=RECOVERING, 5=STARTUP2, 7=ARBITER, 8=DOWN, 9=ROLLBACK, 10=REMOVED.",
+    "resolution": "No primary / replset member down. Check rs.status() and node health; trigger failover or restart the member.",
+    "summary": "mongo replset member {{ $labels.set }} state={{ $value }} (not PRIMARY|SECONDARY)"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

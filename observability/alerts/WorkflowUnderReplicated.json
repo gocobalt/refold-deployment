@@ -1,0 +1,45 @@
+{
+  "alert": "WorkflowUnderReplicated",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "((kube_deployment_status_replicas_available{namespace=\"<NAMESPACE>\",deployment=~\"bkout-one-workflow-backend|workflow-queue-workers\"} < on(namespace,deployment) kube_deployment_spec_replicas{namespace=\"<NAMESPACE>\",deployment=~\"bkout-one-workflow-backend|workflow-queue-workers\"}) * on(namespace) group_left(refold_version) label_replace(max by (namespace,image_spec)(kube_pod_container_info{container=\"cobalt-frontend\"}),\"refold_version\",\"$1\",\"image_spec\",\".*:v?(.*)\")) or ((kube_deployment_status_replicas_available{namespace=\"<NAMESPACE>\",deployment=~\"bkout-one-workflow-backend|workflow-queue-workers\"} < on(namespace,deployment) kube_deployment_spec_replicas{namespace=\"<NAMESPACE>\",deployment=~\"bkout-one-workflow-backend|workflow-queue-workers\"}) unless on(namespace) label_replace(max by (namespace,image_spec)(kube_pod_container_info{container=\"cobalt-frontend\"}),\"refold_version\",\"$1\",\"image_spec\",\".*:v?(.*)\"))",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0,
+    "matchType": "2",
+    "selectedQueryName": "A",
+    "requireMinPoints": true,
+    "requiredNumPoints": 4
+  },
+  "labels": {
+    "component": "api",
+    "service": "workflow",
+    "severity": "1"
+  },
+  "annotations": {
+    "description": "{{ $labels.deployment }} has fewer Ready replicas than desired for >5m — pods are crashing/being recreated or can't schedule. (Per-pod alerts miss this because pods churn faster than their for:15m window.)",
+    "resolution": "1) kubectl -n {{ $labels.namespace }} get deploy {{ $labels.deployment }} ; kubectl -n {{ $labels.namespace }} get pods -l app={{ $labels.deployment }} -o wide  2) check pod events/logs (liveness /api/v1/workflow/health, OOM, scheduling)  3) if 'Insufficient cpu/memory' -> cluster capacity (scale nodes / apply gcsfuse safe-to-evict)  4) if liveness timeouts -> check app health/DB(Atlas) connectivity.",
+    "summary": "workflow deployment {{ $labels.deployment }} (ns={{ $labels.namespace }}) is under-replicated"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

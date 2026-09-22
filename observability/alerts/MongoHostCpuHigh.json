@@ -1,0 +1,44 @@
+{
+  "alert": "MongoHostCpuHigh",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "10m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "( 1 - avg by (node) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) ) * on(node) group_right() kube_pod_info{pod=~\"mongo-exporter-mongodb-service-.*\"}",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0.85,
+    "matchType": "2",
+    "selectedQueryName": "A",
+    "requireMinPoints": true,
+    "requiredNumPoints": 9
+  },
+  "labels": {
+    "namespace": "<NAMESPACE>",
+    "service": "mongodb",
+    "severity": "2"
+  },
+  "annotations": {
+    "resolution": "CPU near limit / throttling. Check load in SigNoz; scale replicas or raise the CPU limit.",
+    "summary": "mongo host node {{ $labels.node }} CPU at {{ printf \"%.2f\" $value }}"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

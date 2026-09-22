@@ -1,0 +1,44 @@
+{
+  "alert": "WorkflowQueueWorkerInstanceDown",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "up{service_name=\"workflow-queue-workers\",k8s_namespace_name=\"<NAMESPACE>\"}",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "3",
+    "target": 0,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 2
+  },
+  "labels": {
+    "component": "queue-workers",
+    "namespace": "<NAMESPACE>",
+    "service": "workflow",
+    "severity": "1"
+  },
+  "annotations": {
+    "resolution": "Scrape/health failing. 1) kubectl -n {{ $labels.namespace }} get pods 2) kubectl -n {{ $labels.namespace }} describe pod <pod> (restarts/OOM) 3) kubectl -n {{ $labels.namespace }} logs <pod> --tail=200 4) roll the deploy if wedged.",
+    "summary": "workflow queue-worker instance {{ $labels.pod }} (ns={{ $labels.namespace }}) is down"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

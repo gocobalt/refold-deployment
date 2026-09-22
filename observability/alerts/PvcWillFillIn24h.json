@@ -1,0 +1,45 @@
+{
+  "alert": "PvcWillFillIn24h",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "10m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "predict_linear(kubelet_volume_stats_used_bytes{namespace!=\"<OBSERVABILITY_NAMESPACE>\",namespace=\"<NAMESPACE>\"}[1h], 24*3600) > kubelet_volume_stats_capacity_bytes{namespace!=\"<OBSERVABILITY_NAMESPACE>\",namespace=\"<NAMESPACE>\"} and kubelet_volume_stats_used_bytes{namespace!=\"<OBSERVABILITY_NAMESPACE>\",namespace=\"<NAMESPACE>\"} / kubelet_volume_stats_capacity_bytes{namespace!=\"<OBSERVABILITY_NAMESPACE>\",namespace=\"<NAMESPACE>\"} > 0.6",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0,
+    "matchType": "2",
+    "selectedQueryName": "A",
+    "requireMinPoints": true,
+    "requiredNumPoints": 9
+  },
+  "labels": {
+    "namespace": "<NAMESPACE>",
+    "service": "storage",
+    "severity": "1"
+  },
+  "annotations": {
+    "description": "Linear projection from past 1h of growth says capacity will be exhausted within a day. Expand or clean up immediately.",
+    "resolution": "PVC filling. kubectl -n {{ $labels.namespace }} get pvc; check usage (df) in the pod; expand the PVC or clean up.",
+    "summary": "PVC {{ $labels.persistentvolumeclaim }} (ns={{ $labels.namespace }}) projected to fill in <24h"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

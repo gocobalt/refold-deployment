@@ -1,0 +1,753 @@
+{
+  "id": "019fdb94-e039-78cc-a720-3aafab23d547",
+  "createdAt": "2026-08-07T09:36:34.873576Z",
+  "updatedAt": "2026-08-07T09:36:34.873576Z",
+  "locked": false,
+  "source": "user",
+  "schemaVersion": "v6",
+  "image": "",
+  "name": "llm-usage-by-agent-14dps56m",
+  "tags": [
+    {
+      "key": "tag",
+      "value": "refold"
+    },
+    {
+      "key": "tag",
+      "value": "llm"
+    },
+    {
+      "key": "tag",
+      "value": "usage"
+    }
+  ],
+  "spec": {
+    "display": {
+      "name": "LLM Usage — By Agent",
+      "description": "Per-agent LLM usage: volume, token mix, cost, error rate, latency and prompt-cache efficiency."
+    },
+    "variables": [],
+    "panels": {
+      "w-1": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Calls/sec by agent",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "reqps",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": 0,
+                "softMax": 0,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/PromQLQuery",
+                  "spec": {
+                    "name": "A",
+                    "query": "sum by (agent) (rate(llm_calls_total{namespace=~\"$namespace\", environment=~\"$environment\", agent=~\"$agent\", model=~\"$model\"}[$__rate_interval]))",
+                    "disabled": false,
+                    "step": 0,
+                    "stats": false,
+                    "legend": "{{agent}}"
+                  }
+                }
+              }
+            }
+          ],
+          "links": []
+        }
+      },
+      "w-10": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Knowledge Extraction — tokens ($__range)",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/NumberPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time"
+              },
+              "formatting": {
+                "unit": "short",
+                "decimalPrecision": "2"
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "scalar",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/PromQLQuery",
+                  "spec": {
+                    "name": "A",
+                    "query": "sum(increase(llm_tokens_total{namespace=~\"$namespace\", bucket=\"auto_learning\"}[$__range]))",
+                    "disabled": false,
+                    "step": 0,
+                    "stats": false,
+                    "legend": ""
+                  }
+                }
+              }
+            }
+          ],
+          "links": []
+        }
+      },
+      "w-11": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Autopilot — cost ($__range)",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/NumberPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time"
+              },
+              "formatting": {
+                "unit": "currencyUSD",
+                "decimalPrecision": "2"
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "scalar",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/PromQLQuery",
+                  "spec": {
+                    "name": "A",
+                    "query": "sum(increase(llm_cost_usd_total{namespace=~\"$namespace\", bucket=\"maintain\"}[$__range]))",
+                    "disabled": false,
+                    "step": 0,
+                    "stats": false,
+                    "legend": ""
+                  }
+                }
+              }
+            }
+          ],
+          "links": []
+        }
+      },
+      "w-12": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Autopilot — tokens ($__range)",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/NumberPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time"
+              },
+              "formatting": {
+                "unit": "short",
+                "decimalPrecision": "2"
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "scalar",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/PromQLQuery",
+                  "spec": {
+                    "name": "A",
+                    "query": "sum(increase(llm_tokens_total{namespace=~\"$namespace\", bucket=\"maintain\"}[$__range]))",
+                    "disabled": false,
+                    "step": 0,
+                    "stats": false,
+                    "legend": ""
+                  }
+                }
+              }
+            }
+          ],
+          "links": []
+        }
+      },
+      "w-2": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Tokens/sec by agent",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "short",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": 0,
+                "softMax": 0,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/PromQLQuery",
+                  "spec": {
+                    "name": "A",
+                    "query": "sum by (agent) (rate(llm_tokens_total{namespace=~\"$namespace\", environment=~\"$environment\", agent=~\"$agent\", model=~\"$model\"}[$__rate_interval]))",
+                    "disabled": false,
+                    "step": 0,
+                    "stats": false,
+                    "legend": "{{agent}}"
+                  }
+                }
+              }
+            }
+          ],
+          "links": []
+        }
+      },
+      "w-3": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Token mix by type (selected agents)",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "short",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": 0,
+                "softMax": 0,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/PromQLQuery",
+                  "spec": {
+                    "name": "A",
+                    "query": "sum by (token_type) (rate(llm_tokens_total{namespace=~\"$namespace\", environment=~\"$environment\", agent=~\"$agent\", model=~\"$model\"}[$__rate_interval]))",
+                    "disabled": false,
+                    "step": 0,
+                    "stats": false,
+                    "legend": "{{token_type}}"
+                  }
+                }
+              }
+            }
+          ],
+          "links": []
+        }
+      },
+      "w-4": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Cost/sec by agent",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "currencyUSD",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": 0,
+                "softMax": 0,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/PromQLQuery",
+                  "spec": {
+                    "name": "A",
+                    "query": "sum by (agent) (rate(llm_cost_usd_total{namespace=~\"$namespace\", environment=~\"$environment\", agent=~\"$agent\", model=~\"$model\"}[$__rate_interval]))",
+                    "disabled": false,
+                    "step": 0,
+                    "stats": false,
+                    "legend": "{{agent}}"
+                  }
+                }
+              }
+            }
+          ],
+          "links": []
+        }
+      },
+      "w-5": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Error rate by agent",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "reqps",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": 0,
+                "softMax": 0,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/PromQLQuery",
+                  "spec": {
+                    "name": "A",
+                    "query": "sum by (agent) (rate(llm_calls_total{namespace=~\"$namespace\", environment=~\"$environment\", agent=~\"$agent\", model=~\"$model\", status=\"error\"}[$__rate_interval]))",
+                    "disabled": false,
+                    "step": 0,
+                    "stats": false,
+                    "legend": "{{agent}}"
+                  }
+                }
+              }
+            }
+          ],
+          "links": []
+        }
+      },
+      "w-6": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "p95 latency by agent",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "s",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": 0,
+                "softMax": 0,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/PromQLQuery",
+                  "spec": {
+                    "name": "A",
+                    "query": "histogram_quantile(0.95, sum by (le, agent) (rate(llm_call_duration_seconds_bucket{namespace=~\"$namespace\", environment=~\"$environment\", agent=~\"$agent\", model=~\"$model\"}[$__rate_interval])))",
+                    "disabled": false,
+                    "step": 0,
+                    "stats": false,
+                    "legend": "{{agent}}"
+                  }
+                }
+              }
+            }
+          ],
+          "links": []
+        }
+      },
+      "w-7": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Cache-read share of prompt tokens by agent",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "percentunit",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": 0,
+                "softMax": 0,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/PromQLQuery",
+                  "spec": {
+                    "name": "A",
+                    "query": "sum by (agent) (rate(llm_tokens_total{namespace=~\"$namespace\", environment=~\"$environment\", agent=~\"$agent\", model=~\"$model\", token_type=\"cache_read\"}[$__rate_interval])) / clamp_min(sum by (agent) (rate(llm_tokens_total{namespace=~\"$namespace\", environment=~\"$environment\", agent=~\"$agent\", model=~\"$model\", token_type=\"prompt\"}[$__rate_interval])), 1)",
+                    "disabled": false,
+                    "step": 0,
+                    "stats": false,
+                    "legend": "{{agent}}"
+                  }
+                }
+              }
+            }
+          ],
+          "links": []
+        }
+      },
+      "w-9": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Knowledge Extraction — cost ($__range)",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/NumberPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time"
+              },
+              "formatting": {
+                "unit": "currencyUSD",
+                "decimalPrecision": "2"
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "scalar",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/PromQLQuery",
+                  "spec": {
+                    "name": "A",
+                    "query": "sum(increase(llm_cost_usd_total{namespace=~\"$namespace\", bucket=\"auto_learning\"}[$__range]))",
+                    "disabled": false,
+                    "step": 0,
+                    "stats": false,
+                    "legend": ""
+                  }
+                }
+              }
+            }
+          ],
+          "links": []
+        }
+      }
+    },
+    "layouts": [
+      {
+        "kind": "Grid",
+        "spec": {
+          "items": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 12,
+              "height": 8,
+              "content": {
+                "$ref": "#/spec/panels/w-1"
+              }
+            },
+            {
+              "x": 0,
+              "y": 8,
+              "width": 12,
+              "height": 8,
+              "content": {
+                "$ref": "#/spec/panels/w-2"
+              }
+            },
+            {
+              "x": 0,
+              "y": 16,
+              "width": 12,
+              "height": 8,
+              "content": {
+                "$ref": "#/spec/panels/w-3"
+              }
+            },
+            {
+              "x": 0,
+              "y": 24,
+              "width": 12,
+              "height": 8,
+              "content": {
+                "$ref": "#/spec/panels/w-4"
+              }
+            },
+            {
+              "x": 0,
+              "y": 32,
+              "width": 12,
+              "height": 8,
+              "content": {
+                "$ref": "#/spec/panels/w-5"
+              }
+            },
+            {
+              "x": 0,
+              "y": 40,
+              "width": 12,
+              "height": 8,
+              "content": {
+                "$ref": "#/spec/panels/w-6"
+              }
+            },
+            {
+              "x": 0,
+              "y": 48,
+              "width": 12,
+              "height": 8,
+              "content": {
+                "$ref": "#/spec/panels/w-7"
+              }
+            },
+            {
+              "x": 0,
+              "y": 56,
+              "width": 6,
+              "height": 4,
+              "content": {
+                "$ref": "#/spec/panels/w-9"
+              }
+            },
+            {
+              "x": 6,
+              "y": 56,
+              "width": 6,
+              "height": 4,
+              "content": {
+                "$ref": "#/spec/panels/w-10"
+              }
+            },
+            {
+              "x": 6,
+              "y": 60,
+              "width": 6,
+              "height": 4,
+              "content": {
+                "$ref": "#/spec/panels/w-11"
+              }
+            },
+            {
+              "x": 6,
+              "y": 64,
+              "width": 6,
+              "height": 4,
+              "content": {
+                "$ref": "#/spec/panels/w-12"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "duration": "",
+    "refreshInterval": "",
+    "links": []
+  }
+}

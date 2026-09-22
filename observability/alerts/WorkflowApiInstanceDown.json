@@ -1,0 +1,45 @@
+{
+  "alert": "WorkflowApiInstanceDown",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "kube_deployment_status_replicas_available{deployment=\"bkout-one-workflow-backend\",namespace=\"<NAMESPACE>\"} == 0 and on(namespace, deployment) kube_deployment_spec_replicas{deployment=\"bkout-one-workflow-backend\",namespace=\"<NAMESPACE>\"}",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 2
+  },
+  "labels": {
+    "component": "api",
+    "namespace": "<NAMESPACE>",
+    "service": "workflow",
+    "severity": "1"
+  },
+  "annotations": {
+    "description": "Prometheus has not received a successful scrape from {{ $labels.instance }} for 2m. Either the pod is crashed, OOMed, or the /metrics endpoint is unreachable.",
+    "resolution": "Scrape/health failing. 1) kubectl -n {{ $labels.namespace }} get pods 2) kubectl -n {{ $labels.namespace }} describe pod <pod> (restarts/OOM) 3) kubectl -n {{ $labels.namespace }} logs <pod> --tail=200 4) roll the deploy if wedged.",
+    "summary": "workflow API instance {{ $labels.pod }} (ns={{ $labels.namespace }}) is down"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

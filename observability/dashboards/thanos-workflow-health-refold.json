@@ -1,0 +1,2267 @@
+{
+  "id": "01a03824-042b-73a1-8c28-15bcae7bd510",
+  "createdAt": "2026-08-25T08:57:59.595231Z",
+  "updatedAt": "2026-09-01T07:55:05.387651Z",
+  "locked": false,
+  "source": "user",
+  "schemaVersion": "v6",
+  "image": "",
+  "name": "thanos-workflow-health",
+  "tags": [],
+  "spec": {
+    "display": {
+      "name": "Thanos Workflow Health — Refold",
+      "description": "Temporal SDK metrics scraped from thanos:8080/metrics. Filters: namespace, org_id, workflow_type, task_queue, worker_type. NOTE: org_id is NOT on temporal_* metrics today — filter/groupBy is wired for the moment thanos ships refold_workflow_* with org_id. Latency shown as rate(_sum)+rate(_count); percentiles land in a follow-up (builder cannot express histogram_quantile)."
+    },
+    "variables": [
+      {
+        "kind": "ListVariable",
+        "spec": {
+          "display": {
+            "name": "Environment (k8s namespace)",
+            "description": "The Kubernetes namespace Refold is deployed into"
+          },
+          "allowAllValue": true,
+          "allowMultiple": true,
+          "customAllValue": "",
+          "capturingRegexp": "",
+          "sort": "alphabetical-asc",
+          "plugin": {
+            "kind": "signoz/DynamicVariable",
+            "spec": {
+              "name": "k8s.namespace.name",
+              "signal": "all"
+            }
+          },
+          "name": "namespace"
+        }
+      },
+      {
+        "kind": "ListVariable",
+        "spec": {
+          "display": {
+            "name": "Org ID",
+            "description": "Empty on temporal_* today — populates once refold_workflow_* metrics ship with org_id"
+          },
+          "allowAllValue": true,
+          "allowMultiple": true,
+          "customAllValue": "",
+          "capturingRegexp": "",
+          "sort": "alphabetical-asc",
+          "plugin": {
+            "kind": "signoz/DynamicVariable",
+            "spec": {
+              "name": "org_id",
+              "signal": "all"
+            }
+          },
+          "name": "org_id"
+        }
+      },
+      {
+        "kind": "ListVariable",
+        "spec": {
+          "display": {
+            "name": "Workflow type",
+            "description": ""
+          },
+          "allowAllValue": true,
+          "allowMultiple": true,
+          "customAllValue": "",
+          "capturingRegexp": "",
+          "sort": "alphabetical-asc",
+          "plugin": {
+            "kind": "signoz/DynamicVariable",
+            "spec": {
+              "name": "workflow_type",
+              "signal": "all"
+            }
+          },
+          "name": "workflow_type"
+        }
+      },
+      {
+        "kind": "ListVariable",
+        "spec": {
+          "display": {
+            "name": "Task queue",
+            "description": ""
+          },
+          "allowAllValue": true,
+          "allowMultiple": true,
+          "customAllValue": "",
+          "capturingRegexp": "",
+          "sort": "alphabetical-asc",
+          "plugin": {
+            "kind": "signoz/DynamicVariable",
+            "spec": {
+              "name": "task_queue",
+              "signal": "all"
+            }
+          },
+          "name": "task_queue"
+        }
+      },
+      {
+        "kind": "ListVariable",
+        "spec": {
+          "display": {
+            "name": "Worker type",
+            "description": ""
+          },
+          "allowAllValue": true,
+          "allowMultiple": true,
+          "customAllValue": "",
+          "capturingRegexp": "",
+          "sort": "alphabetical-asc",
+          "plugin": {
+            "kind": "signoz/DynamicVariable",
+            "spec": {
+              "name": "worker_type",
+              "signal": "all"
+            }
+          },
+          "name": "worker_type"
+        }
+      }
+    ],
+    "panels": {
+      "p_act_fail": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Activity execution failed / sec",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_activity_execution_failed",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND workflow_type IN $workflow_type AND task_queue IN $task_queue AND worker_type IN $worker_type AND org_id IN $org_id"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "org_id",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "workflow_type",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{org_id}} / {{workflow_type}} / {{task_queue}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_act_lat_cnt": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Activity endtoend latency — rate(count) (1/s)",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_activity_succeed_endtoend_latency_seconds_count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND workflow_type IN $workflow_type AND task_queue IN $task_queue AND worker_type IN $worker_type AND org_id IN $org_id"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "org_id",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "workflow_type",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{org_id}} / {{workflow_type}} / {{task_queue}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_act_lat_sum": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Activity endtoend latency — rate(sum) (s/s)",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "s",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_activity_succeed_endtoend_latency_seconds_sum",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND workflow_type IN $workflow_type AND task_queue IN $task_queue AND worker_type IN $worker_type AND org_id IN $org_id"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "org_id",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "workflow_type",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{org_id}} / {{workflow_type}} / {{task_queue}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_active_dag": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Active DAG workflows (thanos custom)",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_active_dag_workflows",
+                              "temporality": "",
+                              "timeAggregation": "latest",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND org_id IN $org_id"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "org_id",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{org_id}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_can": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Workflows continue-as-new / sec",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_workflow_continue_as_new",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND workflow_type IN $workflow_type AND task_queue IN $task_queue AND worker_type IN $worker_type AND org_id IN $org_id"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "org_id",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "workflow_type",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{org_id}} / {{workflow_type}} / {{task_queue}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_canceled": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Workflows canceled / sec",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_workflow_canceled",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND workflow_type IN $workflow_type AND task_queue IN $task_queue AND worker_type IN $worker_type AND org_id IN $org_id"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "org_id",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "workflow_type",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{org_id}} / {{workflow_type}} / {{task_queue}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_completed": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Workflows completed / sec",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_workflow_completed",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND workflow_type IN $workflow_type AND task_queue IN $task_queue AND worker_type IN $worker_type AND org_id IN $org_id"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "org_id",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "workflow_type",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{org_id}} / {{workflow_type}} / {{task_queue}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_failed": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Workflows failed / sec ( no filters )",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_workflow_failed",
+                              "temporality": "",
+                              "timeAggregation": "count",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": ""
+                          },
+                          "groupBy": [
+                            {
+                              "name": "org_id",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "workflow_type",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{org_id}} / {{workflow_type}} / {{task_queue}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_lat_count": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Workflow endtoend latency — rate(count) (1/s)",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_workflow_endtoend_latency_seconds_count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND workflow_type IN $workflow_type AND task_queue IN $task_queue AND worker_type IN $worker_type AND org_id IN $org_id"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "org_id",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "workflow_type",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{org_id}} / {{workflow_type}} / {{task_queue}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_lat_sum": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Workflow endtoend latency — rate(sum) (s/s)",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "s",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_workflow_endtoend_latency_seconds_sum",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND workflow_type IN $workflow_type AND task_queue IN $task_queue AND worker_type IN $worker_type AND org_id IN $org_id"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "org_id",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "workflow_type",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{org_id}} / {{workflow_type}} / {{task_queue}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_pollers": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Active pollers",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_num_pollers",
+                              "temporality": "",
+                              "timeAggregation": "latest",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND task_queue IN $task_queue AND worker_type IN $worker_type"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{task_queue}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_sched_count": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Workflow-task schedule-to-start — rate(count) (1/s)",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_workflow_task_schedule_to_start_latency_seconds_count",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND workflow_type IN $workflow_type AND task_queue IN $task_queue AND worker_type IN $worker_type AND org_id IN $org_id"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "org_id",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "workflow_type",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{org_id}} / {{workflow_type}} / {{task_queue}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_sched_sum": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Workflow-task schedule-to-start — rate(sum) (s/s)",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "s",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_workflow_task_schedule_to_start_latency_seconds_sum",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND workflow_type IN $workflow_type AND task_queue IN $task_queue AND worker_type IN $worker_type AND org_id IN $org_id"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "org_id",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "workflow_type",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{org_id}} / {{workflow_type}} / {{task_queue}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_slots_avail": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Worker task slots available",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_worker_task_slots_available",
+                              "temporality": "",
+                              "timeAggregation": "latest",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND task_queue IN $task_queue AND worker_type IN $worker_type"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "worker_type",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{task_queue}} / {{worker_type}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_slots_used": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Worker task slots used",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_worker_task_slots_used",
+                              "temporality": "",
+                              "timeAggregation": "latest",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND task_queue IN $task_queue AND worker_type IN $worker_type"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "worker_type",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{task_queue}} / {{worker_type}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_sticky_hit": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Sticky cache hits / sec",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_sticky_cache_hit",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND workflow_type IN $workflow_type AND task_queue IN $task_queue AND worker_type IN $worker_type AND org_id IN $org_id"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "org_id",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "workflow_type",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{org_id}} / {{workflow_type}} / {{task_queue}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_sticky_miss": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Sticky cache misses / sec",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_sticky_cache_miss",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND workflow_type IN $workflow_type AND task_queue IN $task_queue AND worker_type IN $worker_type AND org_id IN $org_id"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "org_id",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "workflow_type",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{org_id}} / {{workflow_type}} / {{task_queue}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      },
+      "p_task_fail": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Workflow-task execution failed / sec",
+            "description": ""
+          },
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "visualization": {
+                "timePreference": "global_time",
+                "fillSpans": false
+              },
+              "formatting": {
+                "unit": "",
+                "decimalPrecision": "2"
+              },
+              "chartAppearance": {
+                "lineInterpolation": "spline",
+                "showPoints": false,
+                "lineStyle": "solid",
+                "fillMode": "none",
+                "spanGaps": {
+                  "fillOnlyBelow": false,
+                  "fillLessThan": ""
+                }
+              },
+              "axes": {
+                "softMin": null,
+                "softMax": null,
+                "isLogScale": false
+              },
+              "legend": {
+                "position": "bottom",
+                "mode": "list",
+                "customColors": null
+              },
+              "thresholds": null
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "name": "A",
+                          "stepInterval": 0,
+                          "signal": "metrics",
+                          "source": "",
+                          "aggregations": [
+                            {
+                              "metricName": "temporal_workflow_task_execution_failed",
+                              "temporality": "",
+                              "timeAggregation": "rate",
+                              "spaceAggregation": "sum",
+                              "reduceTo": ""
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "k8s_namespace_name IN $namespace AND workflow_type IN $workflow_type AND task_queue IN $task_queue AND worker_type IN $worker_type AND org_id IN $org_id"
+                          },
+                          "groupBy": [
+                            {
+                              "name": "org_id",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "workflow_type",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "task_queue",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            },
+                            {
+                              "name": "k8s_namespace_name",
+                              "signal": "",
+                              "fieldContext": "",
+                              "fieldDataType": ""
+                            }
+                          ],
+                          "order": null,
+                          "selectFields": null,
+                          "secondaryAggregations": null,
+                          "functions": null,
+                          "legend": "{{org_id}} / {{workflow_type}} / {{task_queue}} / {{k8s_namespace_name}}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "links": null
+        }
+      }
+    },
+    "layouts": [
+      {
+        "kind": "Grid",
+        "spec": {
+          "items": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_completed"
+              }
+            },
+            {
+              "x": 6,
+              "y": 0,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_failed"
+              }
+            },
+            {
+              "x": 0,
+              "y": 5,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_canceled"
+              }
+            },
+            {
+              "x": 6,
+              "y": 5,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_can"
+              }
+            },
+            {
+              "x": 0,
+              "y": 10,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_task_fail"
+              }
+            },
+            {
+              "x": 6,
+              "y": 10,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_active_dag"
+              }
+            },
+            {
+              "x": 0,
+              "y": 15,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_lat_sum"
+              }
+            },
+            {
+              "x": 6,
+              "y": 15,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_lat_count"
+              }
+            },
+            {
+              "x": 0,
+              "y": 20,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_sched_sum"
+              }
+            },
+            {
+              "x": 6,
+              "y": 20,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_sched_count"
+              }
+            },
+            {
+              "x": 0,
+              "y": 25,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_slots_avail"
+              }
+            },
+            {
+              "x": 6,
+              "y": 25,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_slots_used"
+              }
+            },
+            {
+              "x": 0,
+              "y": 30,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_pollers"
+              }
+            },
+            {
+              "x": 6,
+              "y": 30,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_sticky_hit"
+              }
+            },
+            {
+              "x": 0,
+              "y": 35,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_sticky_miss"
+              }
+            },
+            {
+              "x": 6,
+              "y": 35,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_act_fail"
+              }
+            },
+            {
+              "x": 0,
+              "y": 40,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_act_lat_sum"
+              }
+            },
+            {
+              "x": 6,
+              "y": 40,
+              "width": 6,
+              "height": 5,
+              "content": {
+                "$ref": "#/spec/panels/p_act_lat_cnt"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "duration": "1h",
+    "refreshInterval": "1m",
+    "links": null
+  }
+}

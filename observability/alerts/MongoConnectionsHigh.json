@@ -1,0 +1,43 @@
+{
+  "alert": "MongoConnectionsHigh",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "10m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "( mongodb_connections{state=\"current\",cluster=\"<MONGO_CLUSTER>\"} / ( mongodb_connections{state=\"current\",cluster=\"<MONGO_CLUSTER>\"} + mongodb_connections{state=\"available\",cluster=\"<MONGO_CLUSTER>\"} ) )",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0.8,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 9
+  },
+  "labels": {
+    "namespace": "<NAMESPACE>",
+    "service": "mongodb",
+    "severity": "2"
+  },
+  "annotations": {
+    "resolution": "Connection count high. Check client pools / leaks; raise the connection limit or scale the tier.",
+    "summary": "mongo connections at {{ printf \"%.2f\" $value }} of available"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

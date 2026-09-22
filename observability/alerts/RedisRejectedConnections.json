@@ -1,0 +1,44 @@
+{
+  "alert": "RedisRejectedConnections",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "increase(redis_rejected_connections_total{k8s_namespace_name=\"<NAMESPACE>\"}[5m])",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0,
+    "matchType": "2",
+    "selectedQueryName": "A",
+    "requireMinPoints": true,
+    "requiredNumPoints": 4
+  },
+  "labels": {
+    "namespace": "<NAMESPACE>",
+    "service": "redis",
+    "severity": "3"
+  },
+  "annotations": {
+    "resolution": "Redis is rejecting connections (maxclients hit or OOM). Check clients and memory; raise limits or scale.",
+    "summary": "Redis {{ $labels.k8s_namespace_name }} rejected {{ $value }} connections in 5m"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

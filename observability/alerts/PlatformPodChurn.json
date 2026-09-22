@@ -1,0 +1,44 @@
+{
+  "alert": "PlatformPodChurn",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "10m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "count by (namespace, label_resource_name) ( (kube_pod_created{namespace=\"<NAMESPACE>\"} >= (time() - 3600)) * on(pod, namespace) group_left(label_resource_name) kube_pod_labels{label_resource_type=\"service\", label_resource_name!~\"bkout-one-workflow-backend|workflow-queue-workers\",namespace=\"<NAMESPACE>\"} )",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 8,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 9
+  },
+  "labels": {
+    "component": "platform",
+    "namespace": "<NAMESPACE>",
+    "severity": "1"
+  },
+  "annotations": {
+    "description": ">8 pods created in the last hour for this service - sustained recreation/crash-loop that per-pod restart counters miss (each new pod resets restartCount to 0). Normal = replica count + one rollout.",
+    "resolution": "kubectl -n {{ $labels.namespace }} get pods -l app={{ $labels.label_resource_name }} --sort-by=.metadata.creationTimestamp; describe the newest (events: OOM/liveness/FailedScheduling); causes: OOM (raise limits), health/DB timeouts, or cluster capacity.",
+    "summary": "{{ $labels.namespace }}/{{ $labels.label_resource_name }} is churning pods (>8 created in 1h)"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

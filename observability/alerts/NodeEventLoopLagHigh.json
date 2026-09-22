@@ -1,0 +1,44 @@
+{
+  "alert": "NodeEventLoopLagHigh",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "nodejs_eventloop_lag_p99_seconds{k8s_namespace_name=\"<NAMESPACE>\"}",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0.5,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 4
+  },
+  "labels": {
+    "component": "platform",
+    "namespace": "<NAMESPACE>",
+    "severity": "2"
+  },
+  "annotations": {
+    "description": "Node.js event-loop p99 lag has been sustained above 0.5s (normal is 10-70ms). The process is saturated with CPU/synchronous work and is starting to respond slowly to ALL requests — health checks, gRPC, and HTTP alike. This is the LEADING INDICATOR of the event-loop-saturation crashloop pattern (e.g. the prod bkout-one-workflow-backend EmitWorkflowEvent surge, ~3.9k/min, that saturated the single-threaded loop). Istio LEAST_REQUEST load balancing will route NEW traffic away from a lagging pod (it accumulates in-flight requests), which buys time — but sustained lag across pods means the whole service is hot and needs intervention before it crashloops.",
+    "resolution": "In SigNoz, chart nodejs_eventloop_lag_p99_seconds alongside request rate for {{ $labels.job }} in {{ $labels.namespace }}. If it's a traffic/event surge (check EmitWorkflowEvent / queue depth), scale replicas or apply backpressure at the source. If it's one pod, LEAST_REQUEST should shed it and it may self-recover — watch container restarts for the crashloop tipping point. Do NOT just restart pods blindly: confirm the upstream driver (event surge, a hot sync code path, GC pressure) or it recurs.",
+    "summary": "{{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.job }}) Node event-loop p99 lag {{ $value | printf \"%.2f\" }}s for 5m+"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

@@ -1,0 +1,43 @@
+{
+  "alert": "PlatformMemoryHigh",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "10m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "( sum by (pod, namespace, container, label_resource_name) ( container_memory_working_set_bytes{container!=\"POD\",container!=\"\",namespace=\"<NAMESPACE>\"} * on(pod, namespace) group_left(label_resource_name) kube_pod_labels{label_resource_type=\"service\",label_resource_name!~\"ai-python-app|ai-python-worker|audit-service-v2|bkout-integration-auth-backend|bkout-one-workflow-backend|integration-service|workflow-queue-workers\",namespace=\"<NAMESPACE>\"} ) / sum by (pod, namespace, container, label_resource_name) ( kube_pod_container_resource_limits{resource=\"memory\",namespace=\"<NAMESPACE>\"} * on(pod, namespace) group_left(label_resource_name) kube_pod_labels{label_resource_type=\"service\",label_resource_name!~\"ai-python-app|ai-python-worker|audit-service-v2|bkout-integration-auth-backend|bkout-one-workflow-backend|integration-service|workflow-queue-workers\",namespace=\"<NAMESPACE>\"} ) )",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0.8,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 9
+  },
+  "labels": {
+    "namespace": "<NAMESPACE>",
+    "service": "platform",
+    "severity": "2"
+  },
+  "annotations": {
+    "resolution": "Memory near limit. kubectl -n {{ $labels.namespace }} top pods; watch for OOM; review limit/leak; scale out or raise the limit.",
+    "summary": "{{ $labels.label_resource_name }} pod {{ $labels.pod }} memory at {{ printf \"%.2f\" $value }} of limit"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

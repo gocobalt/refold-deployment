@@ -1,0 +1,44 @@
+{
+  "alert": "ContainerCrashLooping",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "10m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "increase(kube_pod_container_status_restarts_total{container!=\"\",container!=\"POD\",namespace=\"<NAMESPACE>\"}[15m]) > 5\nunless on(namespace, pod)\n  kube_pod_labels{label_resource_type=\"service\",namespace=\"<NAMESPACE>\"}\n",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 9
+  },
+  "labels": {
+    "component": "platform",
+    "namespace": "<NAMESPACE>",
+    "severity": "2"
+  },
+  "annotations": {
+    "description": ">5 container restarts in 15m sustained for 10m.",
+    "resolution": "kubectl -n {{ $labels.namespace }} logs {{ $labels.pod }} -c {{ $labels.container }} --previous ; check for OOM (dmesg/limits), crash on startup, or failing dependency.",
+    "summary": "{{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} is crash-looping"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

@@ -1,0 +1,43 @@
+{
+  "alert": "PodMemoryNearLimit",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "15m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "100 * process_resident_memory_bytes{k8s_namespace_name=\"<NAMESPACE>\"} / on(namespace, pod) group_left() max by (namespace, pod) ( kube_pod_container_resource_limits{resource=\"memory\",namespace=\"<NAMESPACE>\"} )",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 85,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 13
+  },
+  "labels": {
+    "component": "platform",
+    "namespace": "<NAMESPACE>",
+    "severity": "2"
+  },
+  "annotations": {
+    "resolution": "kubectl -n {{ $labels.namespace }} top pod {{ $labels.pod }}; check memory trend in SigNoz; if legitimate load, raise the container memory limit; if a leak, restart is a stopgap only — chase the leak.",
+    "summary": "{{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.job }}) using {{ $value | printf \"%.0f\" }}% of its container memory limit for 15m+"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

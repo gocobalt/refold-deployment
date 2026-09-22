@@ -1,0 +1,44 @@
+{
+  "alert": "DeploymentUnderReplicated",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "10m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "kube_deployment_status_replicas_available{deployment!~\"bkout-one-workflow-backend|workflow-queue-workers\",namespace=\"<NAMESPACE>\"}\n  < on(namespace,deployment)\nkube_deployment_spec_replicas{deployment!~\"bkout-one-workflow-backend|workflow-queue-workers\",namespace=\"<NAMESPACE>\"}\n",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 9
+  },
+  "labels": {
+    "component": "platform",
+    "namespace": "<NAMESPACE>",
+    "severity": "2"
+  },
+  "annotations": {
+    "description": "Deployment has fewer Ready pods than desired for >10m — crashing, being recreated, or unschedulable.",
+    "resolution": "kubectl -n {{ $labels.namespace }} get deploy {{ $labels.deployment }}; kubectl -n {{ $labels.namespace }} get pods -o wide | grep {{ $labels.deployment }}; then describe the not-Ready/pending pod for events (OOM / liveness / Insufficient cpu-mem).",
+    "summary": "{{ $labels.namespace }}/{{ $labels.deployment }} under-replicated (<desired Ready for 10m)"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

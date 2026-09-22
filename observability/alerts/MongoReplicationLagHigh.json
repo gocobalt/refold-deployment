@@ -1,0 +1,43 @@
+{
+  "alert": "MongoReplicationLagHigh",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "mongodb_mongod_replset_member_replication_lag{cluster=\"<MONGO_CLUSTER>\", state!=\"ARBITER\"}",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 10,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 4
+  },
+  "labels": {
+    "namespace": "<NAMESPACE>",
+    "service": "mongodb",
+    "severity": "2"
+  },
+  "annotations": {
+    "resolution": "Replication lag high. Check secondary health, oplog window, network, and write load.",
+    "summary": "mongo replication lag {{ $value }}s (member {{ $labels.name }} state={{ $labels.state }})"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

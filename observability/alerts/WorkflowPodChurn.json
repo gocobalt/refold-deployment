@@ -1,0 +1,45 @@
+{
+  "alert": "WorkflowPodChurn",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "10m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "((count by (namespace, label_resource_name) ( (kube_pod_created{namespace=\"<NAMESPACE>\", pod=~\"(bkout-one-workflow-backend|workflow-queue-workers)-.*\"} >= (time() - 3600)) * on(pod, namespace) group_left(label_resource_name) kube_pod_labels{namespace=\"<NAMESPACE>\", label_resource_name=~\"bkout-one-workflow-backend|workflow-queue-workers\"} )) * on(namespace) group_left(refold_version) label_replace(max by (namespace,image_spec)(kube_pod_container_info{container=\"cobalt-frontend\"}),\"refold_version\",\"$1\",\"image_spec\",\".*:v?(.*)\")) or ((count by (namespace, label_resource_name) ( (kube_pod_created{namespace=\"<NAMESPACE>\", pod=~\"(bkout-one-workflow-backend|workflow-queue-workers)-.*\"} >= (time() - 3600)) * on(pod, namespace) group_left(label_resource_name) kube_pod_labels{namespace=\"<NAMESPACE>\", label_resource_name=~\"bkout-one-workflow-backend|workflow-queue-workers\"} )) unless on(namespace) label_replace(max by (namespace,image_spec)(kube_pod_container_info{container=\"cobalt-frontend\"}),\"refold_version\",\"$1\",\"image_spec\",\".*:v?(.*)\"))",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 8,
+    "matchType": "2",
+    "selectedQueryName": "A",
+    "requireMinPoints": true,
+    "requiredNumPoints": 9
+  },
+  "labels": {
+    "component": "api",
+    "service": "workflow",
+    "severity": "1"
+  },
+  "annotations": {
+    "description": ">8 {{ $labels.label_resource_name }} pods were created in the last hour — sustained recreation/crashloop (normal = replica count + one rollout). Threshold tunable.",
+    "resolution": "1) kubectl -n {{ $labels.namespace }} get pods -l app={{ $labels.label_resource_name }} --sort-by=.metadata.creationTimestamp  2) kubectl -n {{ $labels.namespace }} describe pod <newest> (events: liveness/OOM/FailedScheduling)  3) common causes: app health/DB timeouts, OOM (raise limits), or cluster capacity (Insufficient cpu/mem).",
+    "summary": "workflow service {{ $labels.label_resource_name }} (ns={{ $labels.namespace }}) is churning pods"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

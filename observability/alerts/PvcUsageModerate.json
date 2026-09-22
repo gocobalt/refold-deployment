@@ -1,0 +1,42 @@
+{
+  "alert": "PvcUsageModerate",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "( kubelet_volume_stats_used_bytes{namespace!=\"<OBSERVABILITY_NAMESPACE>\",namespace=\"<NAMESPACE>\"} / kubelet_volume_stats_capacity_bytes{namespace!=\"<OBSERVABILITY_NAMESPACE>\",namespace=\"<NAMESPACE>\"} )",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0.7,
+    "matchType": "2",
+    "selectedQueryName": "A"
+  },
+  "labels": {
+    "namespace": "<NAMESPACE>",
+    "service": "storage",
+    "severity": "3"
+  },
+  "annotations": {
+    "resolution": "PVC filling. kubectl -n {{ $labels.namespace }} get pvc; check usage (df) in the pod; expand the PVC or clean up.",
+    "summary": "PVC {{ $labels.persistentvolumeclaim }} (ns={{ $labels.namespace }}) at {{ printf \"%.2f\" $value }} used"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

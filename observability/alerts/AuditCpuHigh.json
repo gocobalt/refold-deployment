@@ -1,0 +1,43 @@
+{
+  "alert": "AuditCpuHigh",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "10m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "( sum by (pod, namespace, container) ( rate(container_cpu_usage_seconds_total{container!=\"POD\",container!=\"\",namespace=\"<NAMESPACE>\"}[5m]) * on(pod, namespace) group_left() kube_pod_labels{label_resource_name=\"audit-service-v2\",namespace=\"<NAMESPACE>\"} ) / sum by (pod, namespace, container) ( kube_pod_container_resource_limits{resource=\"cpu\",namespace=\"<NAMESPACE>\"} * on(pod, namespace) group_left() kube_pod_labels{label_resource_name=\"audit-service-v2\",namespace=\"<NAMESPACE>\"} ) )",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0.9,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 9
+  },
+  "labels": {
+    "namespace": "<NAMESPACE>",
+    "service": "audit",
+    "severity": "2"
+  },
+  "annotations": {
+    "resolution": "CPU near limit/throttling. kubectl -n {{ $labels.namespace }} top pods; check SigNoz; scale replicas or raise the CPU limit.",
+    "summary": "audit pod {{ $labels.pod }} CPU at {{ printf \"%.2f\" $value }} of limit"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

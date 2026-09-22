@@ -1,0 +1,45 @@
+{
+  "alert": "WorkflowApiEventLoopLagHigh",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "nodejs_eventloop_lag_p99_seconds{service_name=\"workflow-service\",k8s_namespace_name=\"<NAMESPACE>\"}",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0.2,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 4
+  },
+  "labels": {
+    "component": "api",
+    "namespace": "<NAMESPACE>",
+    "service": "workflow",
+    "severity": "2"
+  },
+  "annotations": {
+    "description": "Node.js event loop is blocked for >200ms p99 — likely heavy sync work, GC pressure, or saturation.",
+    "resolution": "Node.js event-loop lag high (app blocked/overloaded). Check CPU, GC pauses, slow handlers; scale out or profile.",
+    "summary": "workflow API event-loop p99 lag {{ printf \"%.2f\" $value }} (pod {{ $labels.pod }})"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

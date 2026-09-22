@@ -1,0 +1,45 @@
+{
+  "alert": "WorkflowApiReadyRatioLow",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "( sum(up{service_name=\"workflow-service\",k8s_namespace_name=\"<NAMESPACE>\"} == 1) by () / count(up{service_name=\"workflow-service\",k8s_namespace_name=\"<NAMESPACE>\"}) by () )",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "2",
+    "target": 0.5,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 2
+  },
+  "labels": {
+    "component": "api",
+    "namespace": "<NAMESPACE>",
+    "service": "workflow",
+    "severity": "1"
+  },
+  "annotations": {
+    "description": "Less than half of workflow-service replicas are reporting up. Check pod statuses in {{ $labels.k8s_namespace_name }}.",
+    "resolution": "Fraction of ready replicas low. Check failing pods (get pods), recent rollout, and resource pressure.",
+    "summary": "workflow API ready replicas < 50%"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

@@ -1,0 +1,42 @@
+{
+  "alert": "ClickHouseDiskFillingCritical",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "30m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "100 * sum by (namespace,persistentvolumeclaim) (kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\".*clickhouse.*\",namespace=\"<OBSERVABILITY_NAMESPACE>\"}) / sum by (namespace,persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=~\".*clickhouse.*\",namespace=\"<OBSERVABILITY_NAMESPACE>\"})",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 85,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 27
+  },
+  "labels": {
+    "namespace": "<OBSERVABILITY_NAMESPACE>",
+    "severity": "1"
+  },
+  "annotations": {
+    "resolution": "ClickHouse cannot reclaim space once full: TTL needs merges, merges need free space, and even TRUNCATE fails. Expand the PVC first (kubectl -n <ns> patch pvc <name> -p '{\"spec\":{\"resources\":{\"requests\":{\"storage\":\"<bigger>\"}}}}'), then TRUNCATE system.*_log tables and let TTL merges catch up.",
+    "summary": "ClickHouse PVC {{ $labels.persistentvolumeclaim }} (ns={{ $labels.namespace }}) at {{ printf \"%.1f\" $value }}% - acts NOW or it wedges"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

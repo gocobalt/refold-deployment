@@ -1,0 +1,42 @@
+{
+  "alert": "WorkflowQueueWorkerOOMKilled",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "(\n  (kube_pod_container_status_last_terminated_reason{reason=~\"OOMKilled|Error\",namespace=\"<NAMESPACE>\"} == 1)\n  * on(pod, namespace) group_left()\n  kube_pod_labels{label_resource_name=\"workflow-queue-workers\",namespace=\"<NAMESPACE>\"}\n)\nand on(namespace, pod, container)\n(\n  increase(kube_pod_container_status_restarts_total{container!=\"\",container!=\"POD\",namespace=\"<NAMESPACE>\"}[15m]) > 0\n)\n",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0,
+    "matchType": "2"
+  },
+  "labels": {
+    "component": "queue-workers",
+    "namespace": "<NAMESPACE>",
+    "service": "workflow",
+    "severity": "1"
+  },
+  "annotations": {
+    "resolution": "Container OOMKilled (137) OR in-process abort (SIGABRT/exit 134 - e.g. Node.js 'JavaScript heap out of memory' hit BELOW the cgroup limit). kubectl -n {{ $labels.namespace }} describe pod {{ $labels.pod }} | grep -A5 'Last State'; kubectl -n {{ $labels.namespace }} logs {{ $labels.pod }} --previous | tail -40; raise memory / --max-old-space-size , or chase the leak.",
+    "summary": "workflow queue-worker pod {{ $labels.pod }} OOMKilled"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

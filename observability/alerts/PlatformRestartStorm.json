@@ -1,0 +1,43 @@
+{
+  "alert": "PlatformRestartStorm",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "increase(kube_pod_container_status_restarts_total{namespace=\"<NAMESPACE>\"}[10m]) * on(pod, namespace) group_left(label_resource_name) kube_pod_labels{label_resource_type=\"service\",label_resource_name!~\"ai-python-app|ai-python-worker|audit-service-v2|bkout-integration-auth-backend|bkout-one-workflow-backend|integration-service|workflow-queue-workers\",namespace=\"<NAMESPACE>\"}",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 3,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 2
+  },
+  "labels": {
+    "namespace": "<NAMESPACE>",
+    "service": "platform",
+    "severity": "1"
+  },
+  "annotations": {
+    "resolution": "Repeated restarts. kubectl -n {{ $labels.namespace }} describe pod <pod> (last state/OOM); kubectl -n {{ $labels.namespace }} logs <pod> --previous; check recent deploy/config; roll back if needed.",
+    "summary": "{{ $labels.label_resource_name }} pod {{ $labels.pod }} (ns={{ $labels.namespace }}) restarted >3 times in 10m"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

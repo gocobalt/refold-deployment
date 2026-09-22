@@ -1,0 +1,44 @@
+{
+  "alert": "RedisDown",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "redis_up{k8s_namespace_name=\"<NAMESPACE>\"}",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "3",
+    "target": 0,
+    "matchType": "2",
+    "selectedQueryName": "A",
+    "requireMinPoints": true,
+    "requiredNumPoints": 2
+  },
+  "labels": {
+    "namespace": "<NAMESPACE>",
+    "service": "redis",
+    "severity": "3"
+  },
+  "annotations": {
+    "resolution": "Redis master unreachable/not responding. Check the redis-cache-db-master pod, its node, and memory; restart if crashed. Single master = SPOF for the app.",
+    "summary": "Redis {{ $labels.k8s_namespace_name }} is DOWN (redis_up=0)"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

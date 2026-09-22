@@ -1,0 +1,44 @@
+{
+  "alert": "RedisMemoryHigh",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "10m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "(redis_memory_used_bytes{k8s_namespace_name=\"<NAMESPACE>\"} / redis_memory_max_bytes{k8s_namespace_name=\"<NAMESPACE>\"} > 0.90) and (redis_memory_max_bytes{k8s_namespace_name=\"<NAMESPACE>\"} > 0)",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0,
+    "matchType": "2",
+    "selectedQueryName": "A",
+    "requireMinPoints": true,
+    "requiredNumPoints": 9
+  },
+  "labels": {
+    "namespace": "<NAMESPACE>",
+    "service": "redis",
+    "severity": "3"
+  },
+  "annotations": {
+    "resolution": "maxmemory-policy is noeviction -- at 100% Redis rejects writes (OOM). Investigate key growth/backlog; flush stale keys, raise maxmemory, or scale.",
+    "summary": "Redis {{ $labels.k8s_namespace_name }} memory at {{ $value | printf \"%.2f\" }} of maxmemory"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

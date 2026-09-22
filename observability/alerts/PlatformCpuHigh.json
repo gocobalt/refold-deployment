@@ -1,0 +1,43 @@
+{
+  "alert": "PlatformCpuHigh",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "10m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "( sum by (pod, namespace, container, label_resource_name) ( rate(container_cpu_usage_seconds_total{container!=\"POD\",container!=\"\",namespace=\"<NAMESPACE>\"}[5m]) * on(pod, namespace) group_left(label_resource_name) kube_pod_labels{label_resource_type=\"service\",label_resource_name!~\"ai-python-app|ai-python-worker|audit-service-v2|bkout-integration-auth-backend|bkout-one-workflow-backend|integration-service|workflow-queue-workers\",namespace=\"<NAMESPACE>\"} ) / sum by (pod, namespace, container, label_resource_name) ( kube_pod_container_resource_limits{resource=\"cpu\",namespace=\"<NAMESPACE>\"} * on(pod, namespace) group_left(label_resource_name) kube_pod_labels{label_resource_type=\"service\",label_resource_name!~\"ai-python-app|ai-python-worker|audit-service-v2|bkout-integration-auth-backend|bkout-one-workflow-backend|integration-service|workflow-queue-workers\",namespace=\"<NAMESPACE>\"} ) )",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "1",
+    "target": 0.9,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 9
+  },
+  "labels": {
+    "namespace": "<NAMESPACE>",
+    "service": "platform",
+    "severity": "2"
+  },
+  "annotations": {
+    "resolution": "CPU near limit/throttling. kubectl -n {{ $labels.namespace }} top pods; check SigNoz; scale replicas or raise the CPU limit.",
+    "summary": "{{ $labels.label_resource_name }} pod {{ $labels.pod }} CPU at {{ printf \"%.2f\" $value }} of limit"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}

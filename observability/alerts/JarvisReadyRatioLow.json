@@ -1,0 +1,43 @@
+{
+  "alert": "JarvisReadyRatioLow",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "promql_rule",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "promql",
+          "spec": {
+            "name": "A",
+            "query": "( sum by (label_resource_name, namespace) ( kube_pod_status_ready{condition=\"true\",namespace=\"<NAMESPACE>\"} * on(pod, namespace) group_left(label_resource_name) kube_pod_labels{label_resource_name=~\"ai-python-app|ai-python-worker\",namespace=\"<NAMESPACE>\"} ) / sum by (label_resource_name, namespace) ( kube_pod_info{namespace=\"<NAMESPACE>\"} * on(pod, namespace) group_left(label_resource_name) kube_pod_labels{label_resource_name=~\"ai-python-app|ai-python-worker\",namespace=\"<NAMESPACE>\"} ) )",
+            "disabled": false,
+            "step": 0,
+            "stats": false,
+            "legend": ""
+          }
+        }
+      ],
+      "panelType": "graph",
+      "queryType": "promql"
+    },
+    "op": "2",
+    "target": 0.5,
+    "matchType": "2",
+    "requireMinPoints": true,
+    "requiredNumPoints": 2
+  },
+  "labels": {
+    "namespace": "<NAMESPACE>",
+    "service": "jarvis",
+    "severity": "1"
+  },
+  "annotations": {
+    "resolution": "Ready replicas low. kubectl -n {{ $labels.namespace }} get pods; check failing pods, recent rollout, and resource pressure.",
+    "summary": "jarvis {{ $labels.label_resource_name }} ready ratio <50% in ns={{ $labels.namespace }}"
+  },
+  "disabled": false,
+  "preferredChannels": [],
+  "version": "v5"
+}
